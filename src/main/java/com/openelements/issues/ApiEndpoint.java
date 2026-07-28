@@ -42,10 +42,11 @@ public class ApiEndpoint {
             @RequestParam(name = "isClosed", required = false) Boolean isClosed,
             @RequestParam(name = "filteredLabels", required = false) Set<String> filteredLabels,
             @RequestParam(name = "excludedLabels", required = false) Set<String> excludedLabels,
+            @RequestParam(name = "excludedLabelPrefixes", required = false) Set<String> excludedLabelPrefixes,
             @RequestParam(name = "filteredLanguages", required = false) Set<String> filteredLanguages) {
         log.info(
-                "Getting issues with filters - isAssigned: {}, isClosed: {}, filteredLabels: {}, excludedLabels: {}, filteredLanguages: {}",
-                isAssigned, isClosed, filteredLabels, excludedLabels, filteredLanguages);
+            "Getting issues with filters - isAssigned: {}, isClosed: {}, filteredLabels: {}, excludedLabels: {}, excludedLabelPrefixes: {}, filteredLanguages: {}",
+            isAssigned, isClosed, filteredLabels, excludedLabels, excludedLabelPrefixes, filteredLanguages);
         return issueCache.getAllIssues().stream()
                 .filter(issue -> isAssigned == null || issue.isAssigned() == isAssigned)
                 .filter(issue -> isClosed == null || issue.isClosed() == isClosed)
@@ -53,6 +54,13 @@ public class ApiEndpoint {
                         .containsAll(filteredLabels))
                 .filter(issue -> excludedLabels == null || excludedLabels.isEmpty() || issue.labels().stream()
                         .noneMatch(excludedLabels::contains))
+            .filter(issue -> {
+                if (excludedLabelPrefixes == null || excludedLabelPrefixes.isEmpty()) {
+                return true;
+                }
+                return issue.labels().stream().noneMatch(label -> excludedLabelPrefixes.stream()
+                    .anyMatch(prefix -> label.toLowerCase().startsWith(prefix.toLowerCase())));
+            })
                 .filter(issue -> filteredLanguages == null || filteredLanguages.isEmpty() || issue.repository()
                         .languages().containsAll(filteredLanguages))
                 .collect(Collectors.toUnmodifiableSet());
@@ -64,8 +72,9 @@ public class ApiEndpoint {
             @RequestParam(name = "isClosed", required = false) Boolean isClosed,
             @RequestParam(name = "filteredLabels", required = false) Set<String> filteredLabels,
             @RequestParam(name = "excludedLabels", required = false) Set<String> excludedLabels,
+            @RequestParam(name = "excludedLabelPrefixes", required = false) Set<String> excludedLabelPrefixes,
             @RequestParam(name = "filteredLanguages", required = false) Set<String> filteredLanguages) {
-        return getIssues(isAssigned, isClosed, filteredLabels, excludedLabels, filteredLanguages).size();
+        return getIssues(isAssigned, isClosed, filteredLabels, excludedLabels, excludedLabelPrefixes, filteredLanguages).size();
     }
 
     @GetMapping("/api/v2/repositories/stars")

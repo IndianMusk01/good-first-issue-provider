@@ -40,3 +40,12 @@ hacktoberfest:
 
 Next to the UI, the application provides a REST API to fetch the good first issues.
 The API is available at `http://localhost:8080/api/good-first-issues`.
+
+API note: The `/api/v2/issues` endpoint supports several query parameters to filter results. In
+addition to `filteredLabels` and `excludedLabels` you can now pass `excludedLabelPrefixes`, a
+comma-separated list of label prefixes (case-insensitive) to exclude issues that have any label
+starting with one of the given prefixes. Example:
+
+```
+GET /api/v2/issues?excludedLabelPrefixes=bot-,wip-
+```
